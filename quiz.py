@@ -5,6 +5,10 @@
 코딩 초보자도 쉽게 읽고 이해할 수 있도록 각 부분마다 상세한 주석을 달아두었습니다.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 
 class Quiz:
     """
@@ -22,6 +26,8 @@ class Quiz:
     - is_correct(): 사용자가 고른 번호가 정답인지 확인하여 True/False를 반환합니다.
     - display_hint(): 힌트를 화면에 출력합니다.
     - display_explanation(): 정답 해설을 화면에 출력합니다.
+    - to_dict(): 객체를 JSON 저장용 딕셔너리(dict)로 변환합니다.
+    - from_dict(): 딕셔너리(dict) 데이터를 읽어 Quiz 객체로 복원합니다.
     """
 
     def __init__(
@@ -103,6 +109,39 @@ class Quiz:
         else:
             print(f"📖 [해설] 정답은 {self.answer}번입니다.")
 
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Quiz 객체를 딕셔너리(dict) 형태로 변환합니다.
+        (초보자 팁: JSON 파일로 저장하려면 파이썬 객체를 기본 자료형인 딕셔너리로 바꿔주어야 합니다.)
+
+        :return: 퀴즈 속성들이 담긴 딕셔너리
+        """
+        return {
+            "question": self.question,
+            "choices": self.choices,
+            "answer": self.answer,
+            "hint": self.hint,
+            "explanation": self.explanation,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Quiz:
+        """
+        딕셔너리(dict) 데이터를 바탕으로 새로운 Quiz 객체를 복원(생성)합니다.
+        (초보자 팁: JSON 파일에서 읽어온 딕셔너리를 프로그램에서 다루기 편한 Quiz 객체로 다시 조립합니다.)
+        @classmethod는 객체를 먼저 만들지 않고도 Quiz.from_dict(...) 형태로 바로 호출할 수 있게 해줍니다.
+
+        :param data: question, choices, answer, hint, explanation 키를 가진 딕셔너리
+        :return: 복원된 Quiz 객체
+        """
+        return cls(
+            question=str(data.get("question", "")),
+            choices=list(data.get("choices", [])),
+            answer=int(data.get("answer", 1)),
+            hint=str(data.get("hint", "")),
+            explanation=str(data.get("explanation", "")),
+        )
+
 
 # ========================================================
 # [직접 실행 테스트 영역]
@@ -137,3 +176,12 @@ if __name__ == "__main__":
 
     # 5. 해설 출력 테스트
     sample_quiz.display_explanation()
+
+    # 6. 객체 <-> dict 변환 테스트
+    quiz_dict = sample_quiz.to_dict()
+    print(f"\n[dict 변환 테스트]")
+    print(f"- to_dict 결과: {quiz_dict}")
+
+    restored_quiz = Quiz.from_dict(quiz_dict)
+    print(f"- from_dict 복원 확인: 문제 일치 여부 = {restored_quiz.question == sample_quiz.question}")
+
