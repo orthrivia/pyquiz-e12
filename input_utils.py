@@ -165,6 +165,34 @@ def get_text_input(
         return cleaned
 
 
+def get_yes_no_input(
+    prompt: str,
+    on_exit: Callable[[], Any] | None = None,
+) -> bool:
+    """
+    사용자로부터 예(y/yes) 또는 아니오(n/no) 입력을 받습니다.
+    대소문자를 구분하지 않으며, 올바른 입력이 들어올 때까지 반복해서 물어봅니다.
+
+    초보자 팁:
+    - .lower()는 영문자를 소문자로 통일하여 'Y', 'y', 'YES' 등을 모두 같게 처리할 수 있게 해줍니다.
+
+    :param prompt: 입력 안내 문구 (예: "랜덤으로 섞으시겠습니까? (y/n): ")
+    :param on_exit: 강제 종료 시 호출할 저장 함수
+    :return: 'y'/'yes'면 True, 'n'/'no'면 False (불리언 값)
+    """
+    while True:
+        raw_input = safe_input(prompt, on_exit=on_exit)
+        cleaned = raw_input.strip().lower()
+
+        if cleaned in ("y", "yes"):
+            return True
+        elif cleaned in ("n", "no"):
+            return False
+        else:
+            print("⚠️ 'y'(예) 또는 'n'(아니오)을 입력해 주세요.")
+
+
+
 # ========================================================
 # [직접 실행 테스트 / 데모 영역]
 # 이 파일(input_utils.py)을 직접 실행할 때 동작을 눈으로 확인할 수 있는 예제 코드입니다.

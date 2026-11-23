@@ -15,11 +15,12 @@
 
 from __future__ import annotations
 
+import random
 import sys
 from datetime import datetime
 from typing import Any
 
-from input_utils import get_int_input, get_text_input, safe_exit
+from input_utils import get_int_input, get_text_input, get_yes_no_input, safe_exit
 from quiz import Quiz
 from storage import STATE_FILE_PATH, load_state, save_state
 
@@ -29,6 +30,7 @@ from storage import STATE_FILE_PATH, load_state, save_state
 # ========================================================
 CHOICES_COUNT: int = 4        # 기본 선택지 개수 (4지선다)
 SCORE_PER_CORRECT: int = 10   # 정답 1개당 기본 점수 (10점)
+HINT_PENALTY: int = 3         # 힌트 1회 사용 시 차감 점수 (3점)
 
 
 class QuizGame:
@@ -86,55 +88,115 @@ class QuizGame:
     # [수정 포인트 1] 점수 계산 로직
     # 점수 체계를 바꾸고 싶을 때(예: 백분율, 차등 점수 등) 이 메서드만 수정하면 됩니다.
     # ----------------------------------------------------
-    def calculate_score(self, correct_count: int, total_questions: int) -> int:
+    def calculate_score(
+        self,
+        correct_count: int,
+        total_questions: int,
+        hint_used_count: int = 0,
+    ) -> int:
         """
-        맞힌 문제 수와 전체 문제 수를 바탕으로 최종 점수를 계산합니다.
+        맞힌 문제 수, 전체 문제 수, 힌트 사용 횟수를 바탕으로 최종 점수를 계산합니다.
 
-        [현재 점수 체계]: 맞힌 문제 1개당 SCORE_PER_CORRECT(10점) 부여
-        [대안 팁]:
-        - 백분율 점수로 변경 시: round((correct_count / total_questions) * 100)
+        [점수 체계]
+        - 정답 1개당 +SCORE_PER_CORRECT(10점) 획득
+        - 힌트 1회 사용당 -HINT_PENALTY(3점) 차감
+        - 점수가 0점 미만(음수)으로 떨어지지 않도록 최소 0점을 보장합니다. (max(0, 점수))
 
         :param correct_count: 맞힌 문제 수
         :param total_questions: 푼 전체 문제 수
-        :return: 계산된 최종 점수 (정수)
+        :param hint_used_count: 힌트를 확인한 횟수 (기본값: 0)
+        :return: 계산된 최종 점수 (최소 0점)
         """
         if total_questions == 0:
             return 0
-        return correct_count * SCORE_PER_CORRECT
+        raw_score = (correct_count * SCORE_PER_CORRECT) - (hint_used_count * HINT_PENALTY)
+        # 0점 미만 방어
+        return max(0, raw_score)
 
     # ----------------------------------------------------
     # [기능 1] 퀴즈 풀기
     # ----------------------------------------------------
     def play_game(self) -> None:
         """
-        등록된 퀴즈를 순서대로 풀고 정답/오답 판정 및 해설을 출력한 뒤 점수를 기록합니다.
+        사용자 설정(문제 수 선택, 랜덤 출제 여부)에 따라 퀴즈를 출제하고,
+        문제 풀이 중 힌트 보기(점수 차감) 및 정답/오답 판정, 점수 갱신/저장을 진행합니다.
         """
         if not self.quizzes:
             print("\n⚠️ 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해 주세요!")
             return
 
-        total_questions = len(self.quizzes)
+        available_total = len(self.quizzes)
+
+        # 1. 출제 문제 수 선택 (1 ~ 현재 등록된 문제 수)
+        print("\n" + "=" * 50)
+        print(f"🎯 [퀴즈 설정] (현재 등록된 문제: 총 {available_total}개)")
+        print("=" * 50)
+        question_count = get_int_input(
+            f"출제할 문제 수를 입력하세요 (1~{available_total}): ",
+            min_val=1,
+            max_val=available_total,
+            on_exit=self.save,
+        )
+
+        # 2. 랜덤 출제 여부 선택 (y/n)
+        is_random = get_yes_no_input(
+            "문제 출제 순서를 무작위(랜덤)로 섞으시겠습니까? (y/n): ",
+            on_exit=self.save,
+        )
+
+        # 퀴즈 목록 추출 (랜덤 추출 또는 앞에서부터 순서대로 추출)
+        if is_random:
+            # random.sample(): 중복 없이 원하는 개수만큼 무작위 추출
+            selected_quizzes = random.sample(self.quizzes, question_count)
+        else:
+            selected_quizzes = self.quizzes[:question_count]
+
+        # 3. 퀴즈 풀이 진행
         correct_count = 0
+        hint_used_total = 0
 
         print("\n" + "=" * 50)
-        print(f"🎯 퀴즈 게임을 시작합니다! (총 {total_questions}문제)")
+        order_text = "무작위(랜덤)" if is_random else "기본 순서"
+        print(f"🚀 퀴즈를 시작합니다! (출제 문제 수: {question_count}개 | 순서: {order_text})")
+        print(f"💡 [팁] 보기 번호(1~4) 대신 '0'을 누르면 힌트를 볼 수 있습니다. (힌트 확인 시 {HINT_PENALTY}점 차감)")
         print("=" * 50)
 
-        for index, quiz in enumerate(self.quizzes, start=1):
-            print(f"\n[문제 {index} / {total_questions}]")
+        for index, quiz in enumerate(selected_quizzes, start=1):
+            print(f"\n[문제 {index} / {question_count}]")
             quiz.display()
 
-            # input_utils 모듈을 사용하여 1~4 번호 입력받기 (안전 종료 콜백 self.save 연결)
-            choice = get_int_input(
-                f"정답 번호를 선택하세요 (1~{len(quiz.choices)}): ",
-                min_val=1,
-                max_val=len(quiz.choices),
-                on_exit=self.save,
-            )
+            # 이번 문제에서 이미 힌트를 확인했는지 추적 (중복 차감 방지)
+            hint_viewed_this_question = False
+
+            while True:
+                choice = get_int_input(
+                    f"정답 번호를 선택하세요 (1~{len(quiz.choices)}, 힌트 보기: 0): ",
+                    min_val=0,
+                    max_val=len(quiz.choices),
+                    on_exit=self.save,
+                )
+
+                # 0번 입력: 힌트 보기
+                if choice == 0:
+                    if not quiz.hint:
+                        print("💡 [힌트] 제공된 힌트가 없습니다. (힌트가 없으므로 점수는 차감되지 않습니다.)")
+                    else:
+                        quiz.display_hint()
+                        if not hint_viewed_this_question:
+                            hint_viewed_this_question = True
+                            hint_used_total += 1
+                            print(f"⚠️ 힌트를 확인했습니다! (최종 점수에서 -{HINT_PENALTY}점 차감)")
+                        else:
+                            print("ℹ️ 이미 확인한 힌트입니다. (추가 차감 없음)")
+                    # 힌트 확인 후 다시 답안을 입력할 수 있도록 루프를 이어갑니다.
+                    continue
+
+                # 1~4번 입력: 정답 선택 완료
+                break
 
             # 정답 판정
             if quiz.is_correct(choice):
-                print("🎉 정답입니다! (+10점)")
+                print(f"🎉 정답입니다! (+{SCORE_PER_CORRECT}점)")
                 correct_count += 1
             else:
                 print(f"❌ 아쉽네요, 오답입니다! (선택: {choice}번)")
@@ -142,14 +204,15 @@ class QuizGame:
             # 해설 출력
             quiz.display_explanation()
 
-        # 게임 종료 후 점수 계산
-        final_score = self.calculate_score(correct_count, total_questions)
+        # 4. 게임 종료 후 점수 계산 (힌트 감점 및 0점 방어 적용)
+        final_score = self.calculate_score(correct_count, question_count, hint_used_total)
 
         print("\n" + "=" * 50)
         print("🏁 퀴즈를 모두 마쳤습니다! 결과 발표:")
-        print(f"- 푼 문제 수: {total_questions}문제")
+        print(f"- 푼 문제 수: {question_count}문제")
         print(f"- 맞힌 개수: {correct_count}개")
-        print(f"- 획득한 점수: {final_score}점")
+        print(f"- 힌트 사용: {hint_used_total}회 (총 -{hint_used_total * HINT_PENALTY}점 차감)")
+        print(f"- 획득한 최종 점수: {final_score}점 (최소 0점 방어 적용)")
 
         # 최고 점수 갱신 확인
         is_new_best = final_score > self.best_score
@@ -163,8 +226,9 @@ class QuizGame:
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         record = {
             "date": now_str,
-            "total": total_questions,
+            "total": question_count,
             "correct": correct_count,
+            "hint_used": hint_used_total,
             "score": final_score,
         }
         self.history.append(record)
@@ -314,7 +378,9 @@ class QuizGame:
             total = rec.get("total", 0)
             correct = rec.get("correct", 0)
             score = rec.get("score", 0)
-            print(f" {idx}. [{date_str}] 정답: {correct}/{total}개 | 점수: {score}점")
+            hints = rec.get("hint_used", 0)
+            hint_str = f" (힌트: {hints}회)" if hints > 0 else ""
+            print(f" {idx}. [{date_str}] 정답: {correct}/{total}개{hint_str} | 점수: {score}점")
 
         print("=" * 50)
 
