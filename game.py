@@ -127,10 +127,10 @@ class QuizGame:
 
         available_total = len(self.quizzes)
 
-        # 1. 출제 문제 수 선택 (1 ~ 현재 등록된 문제 수)
+        # 1. 퀴즈 설정 (출제 문제 수 및 랜덤 여부 선택)
         print("\n" + "=" * 50)
         print(f"🎯 [퀴즈 설정] (현재 등록된 문제: 총 {available_total}개)")
-        print("=" * 50)
+        print("-" * 50)
         question_count = get_int_input(
             f"출제할 문제 수를 입력하세요 (1~{available_total}): ",
             min_val=1,
@@ -151,14 +151,16 @@ class QuizGame:
         else:
             selected_quizzes = self.quizzes[:question_count]
 
-        # 3. 퀴즈 풀이 진행
+        # 3. 퀴즈 풀이 시작 안내 (규칙 및 점수/힌트 안내 단일화)
         correct_count = 0
         hint_used_total = 0
+        order_text = "무작위(랜덤)" if is_random else "기본 순서"
 
         print("\n" + "=" * 50)
-        order_text = "무작위(랜덤)" if is_random else "기본 순서"
-        print(f"🚀 퀴즈를 시작합니다! (출제 문제 수: {question_count}개 | 순서: {order_text})")
-        print(f"💡 [팁] 보기 번호(1~4) 대신 '0'을 누르면 힌트를 볼 수 있습니다. (힌트 확인 시 {HINT_PENALTY}점 차감)")
+        print(f"🚀 [퀴즈 시작] 총 {question_count}문제 ({order_text})")
+        print("-" * 50)
+        print(f"  • 정답 점수: 1문제당 +{SCORE_PER_CORRECT}점")
+        print(f"  • 힌트 사용: 답안 입력 시 '0'번 선택 시 힌트 제공 (-{HINT_PENALTY}점 차감, 최소 0점 방어)")
         print("=" * 50)
 
         for index, quiz in enumerate(selected_quizzes, start=1):
