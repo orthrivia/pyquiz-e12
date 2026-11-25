@@ -71,7 +71,24 @@ git log --oneline --graph --all
 
 ---
 
-### 2) 퀴즈 실행 출력 확인 (`python3 main.py`)
+### 2) Git Clone/Pull 테스트
+
+```bash
+mkdir -p /tmp/clone-check && cd /tmp/clone-check
+git clone https://github.com/orthrivia/pyquiz-e12.git
+cd pyquiz-e12
+pwd
+git remote -v
+git log -n 2 --oneline
+
+```
+
+![Git Log Graph](docs/screenshots/git-clone-pull-cmd.png)
+
+
+
+
+### 3) 퀴즈 실행 출력 확인 (`python3 main.py`)
 터미널에서 애플리케이션을 직접 구동하여 메뉴 및 퀴즈 풀기 진행 화면을 확인할 수 있습니다.
 
 ```bash
