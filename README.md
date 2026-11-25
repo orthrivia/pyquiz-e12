@@ -55,7 +55,37 @@ python main.py
 
 ---
 
-## ✨ 4. 주요 기능 목록
+## 📸 4. 실행 화면 및 Git 이력 (Screenshots)
+
+프로젝트의 Git 브랜치/커밋 히스토리 그래프와 실제 프로그램 실행 안내입니다.
+
+### 1) Git 커밋 이력 그래프 (`git log --oneline --graph`)
+브랜치 분기(`feature/polish-and-docs`) 및 병합(Fast-forward), 의미 있는 단위의 커밋 관리 이력을 터미널 그래프로 확인할 수 있습니다.
+
+```bash
+# 터미널에서 Git 커밋 그래프 확인 명령어
+git log --oneline --graph --all
+```
+
+![Git Log Graph](docs/screenshots/git_log_graph.png)
+
+---
+
+### 2) 퀴즈 실행 출력 확인 (`python3 main.py`)
+터미널에서 애플리케이션을 직접 구동하여 메뉴 및 퀴즈 풀기 진행 화면을 확인할 수 있습니다.
+
+```bash
+# 퀴즈 게임 실행 명령어
+python3 main.py
+```
+
+> [!NOTE]
+> 추후 실제 플레이 및 메뉴별 동작 화면 캡처 이미지를 `docs/screenshots/` 경로에 추가할 때 아래 주석을 해제하여 바로 이어 붙일 수 있습니다.
+<!-- ![Quiz Execution](docs/screenshots/quiz_play.png) -->
+
+---
+
+## ✨ 5. 주요 기능 목록
 
 ### 🎯 퀴즈 풀기 (`play_game`)
 - **출제 문제 수 선택**: 현재 등록된 문제 수 범위 내에서 풀고 싶은 문제 수를 1개부터 자유롭게 지정
@@ -95,7 +125,7 @@ python main.py
 
 ---
 
-## 📂 5. 파일 구조 및 역할 요약
+## 📂 6. 파일 구조 및 역할 요약
 
 ```text
 /home/devai/projects/pyquiz-e12/
@@ -106,6 +136,9 @@ python main.py
 ├── game.py          # 전체 게임 흐름 제어(QuizGame 클래스, 점수 규칙, 메뉴 처리)
 ├── main.py          # 프로그램 시작을 담당하는 공식 실행 진입점(Entry Point)
 ├── state.json       # 퀴즈 데이터 및 플레이 기록을 보관하는 JSON 영속성 파일
+├── docs/            # 프로젝트 문서 및 화면 캡처 저장소
+│   └── screenshots/
+│       └── git_log_graph.png  # Git 브랜치 및 커밋 로그 그래프 캡처 이미지
 └── README.md        # 프로젝트 전체 문서 및 사용자/개발자 가이드
 ```
 
@@ -118,10 +151,11 @@ python main.py
 | **`game.py`** | `class QuizGame` | 퀴즈 풀기, 문제 수/랜덤 설정, 힌트 감점, 점수 계산, 퀴즈 CRUD, 점수 히스토리 총괄 |
 | **`main.py`** | `main()` | `QuizGame().run()`을 호출하여 애플리케이션을 가동하는 진입점 |
 | **`state.json`** | JSON 데이터 | 퀴즈 목록, 역대 최고 점수, 플레이 일시별 기록을 저장하는 파일 |
+| **`docs/`** | 스크린샷 이미지 | Git 커밋 이력 그래프 등 시각화 자료 보관 |
 
 ---
 
-## 💾 6. 데이터 파일 설명 (`state.json`)
+## 💾 7. 데이터 파일 설명 (`state.json`)
 
 ### 파일 경로
 - 프로젝트 루트 경로: `state.json`
@@ -169,7 +203,7 @@ python main.py
 
 ---
 
-## 🛠️ 7. 코드 커스터마이징 및 수정 포인트 가이드
+## 🛠️ 8. 코드 커스터마이징 및 수정 포인트 가이드
 
 코딩 왕초보가 게임 규칙이나 선택지 개수를 직접 변경해보고 싶다면 아래 파일의 상수를 수정하면 됩니다:
 
@@ -192,7 +226,7 @@ def calculate_score(self, correct_count: int, total_questions: int, hint_used_co
 
 ---
 
-## 🎓 8. 초보자를 위한 핵심 복습 포인트
+## 🎓 9. 초보자를 위한 핵심 복습 포인트
 
 1. **객체지향 프로그래밍 (OOP) & 캡슐화**
    - 퀴즈 1개의 데이터와 동작을 `Quiz` 클래스 하나에 모아 관리함으로써 코드 응집도를 높였습니다.
