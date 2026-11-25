@@ -41,16 +41,16 @@ class QuizGame:
     - filepath (str): 상태를 저장하고 불러올 JSON 파일 경로
     - quizzes (list[Quiz]): 현재 게임에 등록된 Quiz 객체 목록
     - best_score (int): 역대 최고 점수
-    - history (list[dict]): 역대 플레이 기록 목록
+    - history (list[dict]): 역대 플레이 기록 목록 (날짜, 문제수, 맞힌개수, 힌트사용, 점수)
 
-    [주요 메서드(기능 분리)]
-    1. calculate_score(): 점수 계산 방식 전담 (수정 포인트)
-    2. play_game(): 퀴즈 출제, 정답 판정, 점수 갱신 및 기록
-    3. add_quiz(): 새 퀴즈 입력 검증 및 등록
-    4. list_quizzes(): 등록된 퀴즈 목록 열람
-    5. delete_quiz(): 지정한 번호의 퀴즈 삭제
+    [주요 메서드 및 기능 구조]
+    1. calculate_score(): 점수 계산 방식 전담 (정답당 +10점, 힌트당 -3점, 최소 0점 방어)
+    2. play_game(): 문제 수 선택, 랜덤 출제 여부, 힌트 보기(0번), 정답 판정, 점수 갱신/기록
+    3. add_quiz(): 새 퀴즈 입력 검증(문제, 4개 선택지, 정답 번호, 힌트/해설) 및 즉시 저장
+    4. list_quizzes(): 등록된 모든 퀴즈 목록 열람
+    5. delete_quiz(): 지정한 번호의 퀴즈 삭제 (0번 입력 시 취소) 및 즉시 저장
     6. view_scores(): 최고 점수 및 역대 플레이 히스토리 조회
-    7. save(): 현재 게임 상태를 파일에 저장
+    7. save(): 현재 메모리의 게임 상태를 state.json 파일에 저장
     8. run(): 메인 메뉴 반복 실행 루프
     """
 
