@@ -165,4 +165,39 @@ python main.py
 2. **파일 내용 손상 (`json.JSONDecodeError`, `UnicodeDecodeError`)**:
    - 사용자의 임의 편집이나 외부 오류로 JSON 문법이 깨진 경우, `try/except` 블록에서 오류를 포착하여 경고 메시지를 안내하고 기본 데이터로 안전하게 복구합니다.
 3. **스키마 무결성 훼손 (`validate_state_schema()`)**:
-   - 최상위 필수 키(`quizzes`, `best_score`, `history`) 누락, 리스트/정수 자료형 불일치, 퀴즈의 4지선다 규격 미달 등이 감지되면 자동으로 기본 데이터로 초기화하여 런타임 크래시를 방지합니다.
+   - 최상위 필수 키(`quizzes`, `best_score`, `history`) 누락, 리스트/정수 자료형 불일치, 각 퀴즈의 4지선다 및 정답 1~4 범위 미달 등이 감지되면 자동으로 기본 데이터로 초기화하여 런타임 크래시를 방지합니다.
+
+---
+
+## 🛠️ 7. 코드 커스터마이징 및 수정 포인트 가이드
+
+코딩 왕초보가 게임 규칙이나 선택지 개수를 직접 변경해보고 싶다면 아래 파일의 상수를 수정하면 됩니다:
+
+### 1) 선택지 개수 및 점수 규칙 변경 (`game.py`)
+```python
+# game.py 상단에 정의된 상수들
+CHOICES_COUNT: int = 4        # 기본 선택지 개수 (5지선다로 바꾸고 싶다면 5로 변경)
+SCORE_PER_CORRECT: int = 10   # 정답 1개당 획득 점수
+HINT_PENALTY: int = 3         # 힌트 1회 사용 시 차감 점수 (0점 미만 방어 로직 내장)
+```
+
+### 2) 점수 계산 공식 변경 (`game.py` -> `calculate_score()`)
+```python
+def calculate_score(self, correct_count: int, total_questions: int, hint_used_count: int = 0) -> int:
+    # 백분율 점수(100점 만점)로 변경하고 싶다면:
+    # return max(0, round((correct_count / total_questions) * 100) - (hint_used_count * HINT_PENALTY))
+    raw_score = (correct_count * SCORE_PER_CORRECT) - (hint_used_count * HINT_PENALTY)
+    return max(0, raw_score)
+```
+
+---
+
+## 🎓 8. 초보자를 위한 핵심 복습 포인트
+
+1. **객체지향 프로그래밍 (OOP) & 캡슐화**
+   - 퀴즈 1개의 데이터와 동작을 `Quiz` 클래스 하나에 모아 관리함으로써 코드 응집도를 높였습니다.
+2. **단일 책임 원칙 (SRP)**
+   - 데이터(`default_data.py`), 파일 입출력(`storage.py`), 입력 및 안전 종료(`input_utils.py`), 게임 흐름(`game.py`), 실행 시작(`main.py`)으로 분리하여 유지보수가 매우 쉽습니다.
+3. **방어적 프로그래밍 (Defensive Programming)**
+   - 빈 입력, 문자열 입력, 범위 밖 숫자, `Ctrl+C` 비정상 종료, 손상된 JSON 파일 등 모든 예외 상황을 고려하여 프로그램이 절대로 멈추지 않고 데이터를 지키도록 구현되었습니다.
+
